@@ -20,7 +20,7 @@ pd.set_option('display.max_rows', None)
 CMC_API_KEY = os.getenv("CMC_API_KEY")
 FROM_EMAIL = os.getenv("FROM_EMAIL")
 FROM_PASS = os.getenv("FROM_PASS")
-TO_EMAIL = os.getenv("TO_EMAIL")  # Ex: "email1@example.com,email2@example.com"
+TO_EMAILS = os.getenv("TO_EMAIL").split(",")  # Ex: "email1@example.com,email2@example.com"
 
 # Convertir la variable TO_EMAIL en liste d'emails
 TO_EMAILS = [email.strip() for email in TO_EMAIL.split(",")]
@@ -64,23 +64,24 @@ def filter_cryptos(data):
     return df_filtered
 
 # Fonction pour envoyer un email de notification à plusieurs destinataires
-def send_email(subject, body, recipients):
-    msg = MIMEMultipart()
-    msg['From'] = FROM_EMAIL
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
+def send_email(subject, body, to_emails):
+    for to_email in to_emails:
+        to_email = to_email.strip()  # enlever les espaces
+        msg = MIMEMultipart()
+        msg['From'] = FROM_EMAIL
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
 
-    try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(FROM_EMAIL, FROM_PASS)
-        for to_email in recipients:
-            msg['To'] = to_email
+        try:
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(FROM_EMAIL, FROM_PASS)
             server.sendmail(FROM_EMAIL, to_email, msg.as_string())
-            print(f"E-mail envoyé à {to_email}")
-        server.quit()
-    except Exception as e:
-        print(f"Erreur lors de l'envoi de l'e-mail: {e}")
+            server.quit()
+            print(f"E-mail envoyé avec succès à {to_email}!")
+        except Exception as e:
+            print(f"Erreur lors de l'envoi de l'e-mail à {to_email}: {e}")
 
 # Fonction principale qui vérifie régulièrement les prix
 def monitor_cryptos():
@@ -119,4 +120,5 @@ if __name__ == "__main__":
     thread.daemon = True
     thread.start()
     app.run(host="0.0.0.0", port=5000)
+
 
