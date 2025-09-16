@@ -20,10 +20,10 @@ pd.set_option('display.max_rows', None)
 CMC_API_KEY = os.getenv("CMC_API_KEY")
 FROM_EMAIL = os.getenv("FROM_EMAIL")
 FROM_PASS = os.getenv("FROM_PASS")
-TO_EMAILS = os.getenv("TO_EMAIL").split(",")  # Ex: "email1@example.com,email2@example.com"
 
-# Convertir la variable TO_EMAIL en liste d'emails
-TO_EMAILS = [email.strip() for email in TO_EMAIL.split(",")]
+# Récupérer TO_EMAIL (chaîne) et la transformer en liste d'emails
+TO_EMAILS = os.getenv("TO_EMAIL", "").split(",")
+TO_EMAILS = [email.strip() for email in TO_EMAILS if email.strip()]
 
 # Fonction pour récupérer les données de l'API CoinMarketCap
 def get_cryptos_data():
@@ -66,7 +66,6 @@ def filter_cryptos(data):
 # Fonction pour envoyer un email de notification à plusieurs destinataires
 def send_email(subject, body, to_emails):
     for to_email in to_emails:
-        to_email = to_email.strip()  # enlever les espaces
         msg = MIMEMultipart()
         msg['From'] = FROM_EMAIL
         msg['To'] = to_email
@@ -120,5 +119,3 @@ if __name__ == "__main__":
     thread.daemon = True
     thread.start()
     app.run(host="0.0.0.0", port=5000)
-
-
