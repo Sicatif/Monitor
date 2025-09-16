@@ -1,3 +1,4 @@
+import os
 import requests
 import pandas as pd
 import time
@@ -5,7 +6,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask
-import threading  # Importer le module threading
+import threading
 
 # Créer l'application Flask
 app = Flask(__name__)
@@ -15,11 +16,17 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
 pd.set_option('display.max_rows', None)
 
+# Récupération des variables d'environnement
+CMC_API_KEY = os.getenv("CMC_API_KEY")
+FROM_EMAIL = os.getenv("FROM_EMAIL")
+FROM_PASS = os.getenv("FROM_PASS")
+TO_EMAIL = os.getenv("TO_EMAIL")
+
 # Fonction pour récupérer les données de l'API CoinMarketCap
 def get_cryptos_data():
     url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
     headers = {
-        'X-CMC_PRO_API_KEY': '5ce9d8f1-29cb-45c8-8548-f8da597bab83',  # Remplace par ta clé API CoinMarketCap
+        'X-CMC_PRO_API_KEY': CMC_API_KEY,
         'Accept': 'application/json'
     }
     params = {
@@ -42,7 +49,6 @@ def filter_cryptos(data):
     filtered_data = [crypto for crypto in data if crypto['slug'] in target_cryptos]
     df = pd.DataFrame(filtered_data)
 
-    # Extraction des informations pertinentes
     df_filtered = pd.DataFrame({
         'Nom': df['name'],
         'Symbole': df['symbol'],
@@ -56,23 +62,17 @@ def filter_cryptos(data):
 
 # Fonction pour envoyer un email de notification
 def send_email(subject, body, to_email):
-    from_email = "zorrogmall@gmail.com"  # Remplace par ton adresse e-mail
-    from_password = "hwbs plqw vgip nrua"  # Remplace par ton mot de passe ou un mot de passe spécifique pour l'application (si Gmail)
-
     msg = MIMEMultipart()
-    msg['From'] = from_email
+    msg['From'] = FROM_EMAIL
     msg['To'] = to_email
     msg['Subject'] = subject
-
     msg.attach(MIMEText(body, 'plain'))
 
     try:
-        # Connexion au serveur SMTP de Gmail
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
-        server.login(from_email, from_password)
-        text = msg.as_string()
-        server.sendmail(from_email, to_email, text)
+        server.login(FROM_EMAIL, FROM_PASS)
+        server.sendmail(FROM_EMAIL, to_email, msg.as_string())
         server.quit()
         print("E-mail envoyé avec succès!")
     except Exception as e:
@@ -80,36 +80,28 @@ def send_email(subject, body, to_email):
 
 # Fonction principale qui vérifie régulièrement les prix
 def monitor_cryptos():
-    # Prix spécifiques à surveiller
     target_prices = {
-        'bitcoin': 78337.95,  # Seuil de prix pour Bitcoin
-        'ethereum': 2002,  # Seuil de prix pour Ethereum
-        'xrp': 1.96,  # Seuil de prix pour XRP
-        'cardano': 0.5,  # Seuil de prix pour Cardano
+        'bitcoin': 78337.95,
+        'ethereum': 2002,
+        'xrp': 1.96,
+        'cardano': 0.5,
     }
 
-    # Boucle infinie qui vérifie les prix toutes les 10 minutes (600 secondes)
     while True:
         crypto_data = get_cryptos_data()
 
         if crypto_data:
-            # Filtrer les cryptos d'intérêt
             df_filtered = filter_cryptos(crypto_data)
-
-            # Vérifier si les prix sont en dessous des seuils définis
             for index, row in df_filtered.iterrows():
                 crypto_name = row['Nom'].lower()
                 current_price = row['Prix actuel (USD)']
 
                 if crypto_name in target_prices and current_price <= target_prices[crypto_name]:
-                    # Si le prix est inférieur ou égal au seuil, envoyer un e-mail
-                    subject = f"Alerta : {crypto_name.capitalize()} a atteint le seuil"
+                    subject = f"Alerte : {crypto_name.capitalize()} a atteint le seuil"
                     body = f"{crypto_name.capitalize()} a atteint un prix de {current_price} USD.\n\n" \
                            f"Le seuil était fixé à {target_prices[crypto_name]} USD."
-                    to_email = "sicatif@yahoo.fr"  # Remplace par l'adresse e-mail de destination
-                    send_email(subject, body, to_email)
+                    send_email(subject, body, TO_EMAIL)
 
-        # Attendre 10 minutes avant de vérifier à nouveau
         time.sleep(600)
 
 # Route de Flask pour afficher une page simple
@@ -117,16 +109,12 @@ def monitor_cryptos():
 def index():
     return "Ton script fonctionne et est en ligne 24/7 !"
 
-# Lancer la fonction de monitoring dans un thread séparé
+# Lancer le monitoring dans un thread séparé
 def run_monitoring():
     monitor_cryptos()
 
-# Lancer l'application Flask dans le thread principal
 if __name__ == "__main__":
-    # Démarrer le monitoring dans un thread
     thread = threading.Thread(target=run_monitoring)
-    thread.daemon = True  # Cela permet d'arrêter le thread lorsque le serveur Flask s'arrête
+    thread.daemon = True
     thread.start()
-
-    # Lancer le serveur Flask
-    app.run(host="0.0.0.0", port=5000)  # Utilise le port 5000 (ou 3000 si nécessaire pour Replit)
+    app.run(host="0.0.0.0", port=5000)
