@@ -20,7 +20,10 @@ pd.set_option('display.max_rows', None)
 CMC_API_KEY = os.getenv("CMC_API_KEY")
 FROM_EMAIL = os.getenv("FROM_EMAIL")
 FROM_PASS = os.getenv("FROM_PASS")
-TO_EMAIL = os.getenv("TO_EMAIL")
+TO_EMAIL = os.getenv("TO_EMAIL")  # Ex: "email1@example.com,email2@example.com"
+
+# Convertir la variable TO_EMAIL en liste d'emails
+TO_EMAILS = [email.strip() for email in TO_EMAIL.split(",")]
 
 # Fonction pour récupérer les données de l'API CoinMarketCap
 def get_cryptos_data():
@@ -60,11 +63,10 @@ def filter_cryptos(data):
 
     return df_filtered
 
-# Fonction pour envoyer un email de notification
-def send_email(subject, body, to_email):
+# Fonction pour envoyer un email de notification à plusieurs destinataires
+def send_email(subject, body, recipients):
     msg = MIMEMultipart()
     msg['From'] = FROM_EMAIL
-    msg['To'] = to_email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
 
@@ -72,9 +74,11 @@ def send_email(subject, body, to_email):
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(FROM_EMAIL, FROM_PASS)
-        server.sendmail(FROM_EMAIL, to_email, msg.as_string())
+        for to_email in recipients:
+            msg['To'] = to_email
+            server.sendmail(FROM_EMAIL, to_email, msg.as_string())
+            print(f"E-mail envoyé à {to_email}")
         server.quit()
-        print("E-mail envoyé avec succès!")
     except Exception as e:
         print(f"Erreur lors de l'envoi de l'e-mail: {e}")
 
@@ -89,20 +93,17 @@ def monitor_cryptos():
 
     while True:
         crypto_data = get_cryptos_data()
-
         if crypto_data:
             df_filtered = filter_cryptos(crypto_data)
             for index, row in df_filtered.iterrows():
                 crypto_name = row['Nom'].lower()
                 current_price = row['Prix actuel (USD)']
-
                 if crypto_name in target_prices and current_price <= target_prices[crypto_name]:
                     subject = f"Alerte : {crypto_name.capitalize()} a atteint le seuil"
                     body = f"{crypto_name.capitalize()} a atteint un prix de {current_price} USD.\n\n" \
                            f"Le seuil était fixé à {target_prices[crypto_name]} USD."
-                    send_email(subject, body, TO_EMAIL)
-
-        time.sleep(600)
+                    send_email(subject, body, TO_EMAILS)
+        time.sleep(600)  # Vérifie toutes les 10 minutes
 
 # Route de Flask pour afficher une page simple
 @app.route('/')
@@ -118,5 +119,3 @@ if __name__ == "__main__":
     thread.daemon = True
     thread.start()
     app.run(host="0.0.0.0", port=5000)
-
-
