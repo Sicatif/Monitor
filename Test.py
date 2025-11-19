@@ -82,8 +82,8 @@ def monitor_cryptos():
     target_prices = {
         'bitcoin': 78337.95,
         'ethereum': 2002,
-        'xrp': 4.00,
-        'cardano': 0.5,
+        'xrp': 2.00,
+        'cardano': 0.25,
     }
 
     crypto_data = get_cryptos_data()
@@ -107,3 +107,4 @@ def index():
 if __name__ == "__main__":
     monitor_cryptos()  # une seule fois
     app.run(host="0.0.0.0", port=5000)
+
