@@ -1,0 +1,31 @@
+name: Test Crypto Monitor
+
+on:
+  workflow_dispatch: # Permet de lancer le workflow manuellement depuis GitHub
+
+jobs:
+  test-monitor:
+    runs-on: ubuntu-latest
+    env: # Ici, on lie les secrets aux variables d'environnement pour le script
+      CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+      FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+      FROM_PASS: ${{ secrets.FROM_PASS }}
+      TO_EMAIL: ${{ secrets.TO_EMAIL }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas flask
+
+      - name: Run crypto monitor script (test)
+        run: |
+          python Test.py
