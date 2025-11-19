@@ -87,7 +87,7 @@ def monitor_cryptos():
     target_prices = {
         'bitcoin': 78337.95,
         'ethereum': 2002,
-        'xrp': 2.00,
+        'xrp': 4.00,
         'cardano': 0.5,
     }
 
@@ -119,4 +119,5 @@ if __name__ == "__main__":
     thread.daemon = True
     thread.start()
     app.run(host="0.0.0.0", port=5000)
+
 
