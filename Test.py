@@ -43,7 +43,7 @@ def get_cryptos_data():
 
 # Filtrer les cryptos ciblées
 def filter_cryptos(data):
-    target_cryptos = ['bitcoin', 'ethereum', 'xrp', 'cardano']
+    target_cryptos = ['bitcoin', 'ethereum', 'xrp', 'cardano', 'polkadot']
     filtered_data = [crypto for crypto in data if crypto['slug'] in target_cryptos]
     df = pd.DataFrame(filtered_data)
 
@@ -84,6 +84,7 @@ def monitor_cryptos():
         'ethereum': 2002,
         'xrp': 2.00,
         'cardano': 0.25,
+        'polkadot': 2.10,
     }
 
     crypto_data = get_cryptos_data()
@@ -107,4 +108,5 @@ def index():
 if __name__ == "__main__":
     monitor_cryptos()  # une seule fois
     app.run(host="0.0.0.0", port=5000)
+
 
