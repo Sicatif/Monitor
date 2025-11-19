@@ -1,12 +1,14 @@
 name: Test Crypto Monitor
 
 on:
-  workflow_dispatch: # Permet de lancer le workflow manuellement depuis GitHub
+  schedule:
+    - cron: '*/10 * * * *'  # toutes les 10 minutes
+  workflow_dispatch:        # permet aussi de lancer manuellement
 
 jobs:
   test-monitor:
     runs-on: ubuntu-latest
-    env: # Ici, on lie les secrets aux variables d'environnement pour le script
+    env:
       CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
       FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
       FROM_PASS: ${{ secrets.FROM_PASS }}
@@ -26,6 +28,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests pandas flask
 
-      - name: Run crypto monitor script (test)
+      - name: Run crypto monitor script
         run: |
           python Test.py
