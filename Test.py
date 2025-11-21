@@ -90,7 +90,7 @@ def send_email(subject, body, to_emails):
 def monitor_cryptos():
     # SEUILS D'ACHAT (prix bas - opportunité d'achat)
     buy_prices = {
-        'bitcoin': 85427.43, #78337.95,
+        'bitcoin': 85427.43,
         'ethereum': 2002,
         'xrp': 2.00,
         'cardano': 0.25,
@@ -100,12 +100,12 @@ def monitor_cryptos():
     
     # SEUILS DE VENTE (prix haut - prise de profit)
     sell_prices = {
-        'bitcoin': 100000.00,    # Vendre si Bitcoin ≥ 100,000 USD
-        'ethereum': 5000.00,     # Vendre si Ethereum ≥ 5,000 USD
-        'xrp': 5.00,             # Vendre si XRP ≥ 5.00 USD
-        'cardano': 3.00,         # Vendre si Cardano ≥ 3.00 USD
-        'polkadot': 10.00,       # Vendre si Polkadot ≥ 10.00 USD
-        'litecoin': 70.00,       # Vendre si Litecoin ≥ 500.00 USD
+        'bitcoin': 100000.00,
+        'ethereum': 5000.00,
+        'xrp': 5.00,
+        'cardano': 3.00,
+        'polkadot': 10.00,
+        'litecoin': 70.00,
     }
 
     print("🔄 Récupération des données crypto...")
@@ -124,12 +124,41 @@ def monitor_cryptos():
     print("📊 Données récupérées :")
     print(df_filtered.to_string(index=False))
     
-    # Vérifier les seuils d'ACHAT et de VENTE
+    # 🔍 DEBUG DÉTAILLÉ
+    print("\n" + "="*50)
+    print("🔍 DEBUG DÉTAILLÉ DES ALERTES")
+    print("="*50)
+    
     alerts_sent = 0
     
     for index, row in df_filtered.iterrows():
         crypto_name = row['Nom'].lower()
         current_price = row['Prix actuel (USD)']
+        
+        print(f"\n📊 Analyse: {crypto_name}")
+        print(f"   Prix actuel: {current_price}")
+        print(f"   Seuil achat: {buy_prices.get(crypto_name, 'NON TROUVÉ')}")
+        print(f"   Seuil vente: {sell_prices.get(crypto_name, 'NON TROUVÉ')}")
+        
+        # Vérifier si le nom existe dans les dictionnaires
+        buy_exists = crypto_name in buy_prices
+        sell_exists = crypto_name in sell_prices
+        print(f"   Nom dans buy_prices: {buy_exists}")
+        print(f"   Nom dans sell_prices: {sell_exists}")
+        
+        # DEBUG ACHAT
+        if buy_exists:
+            condition_achat = current_price <= buy_prices[crypto_name]
+            print(f"   Condition ACHAT: {current_price} <= {buy_prices[crypto_name]} = {condition_achat}")
+            if condition_achat:
+                print(f"   🟢 ALERTE ACHAT DÉCLENCHÉE!")
+        
+        # DEBUG VENTE
+        if sell_exists:
+            condition_vente = current_price >= sell_prices[crypto_name]
+            print(f"   Condition VENTE: {current_price} >= {sell_prices[crypto_name]} = {condition_vente}")
+            if condition_vente:
+                print(f"   🔴 ALERTE VENTE DÉCLENCHÉE!")
         
         # 🔽 ALERTE ACHAT (prix bas)
         if crypto_name in buy_prices and current_price <= buy_prices[crypto_name]:
@@ -146,7 +175,7 @@ Seuil d'achat: {buy_prices[crypto_name]:,} USD
 
 Date: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}
             """
-            print(f"🟢 Alerte ACHAT {crypto_name}: {current_price:,.2f} <= {buy_prices[crypto_name]:,}")
+            print(f"🟢 Envoi email ACHAT pour {crypto_name}")
             send_email(subject, body, TO_EMAILS)
             alerts_sent += 1
         
@@ -166,9 +195,13 @@ Seuil de vente: {sell_prices[crypto_name]:,} USD
 
 Date: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}
             """
-            print(f"🔴 Alerte VENTE {crypto_name}: {current_price:,.2f} >= {sell_prices[crypto_name]:,} (Profit: {profit:,.2f})")
+            print(f"🔴 Envoi email VENTE pour {crypto_name}")
             send_email(subject, body, TO_EMAILS)
             alerts_sent += 1
+    
+    print("\n" + "="*50)
+    print(f"📨 Total alertes envoyées: {alerts_sent}")
+    print("="*50)
     
     if alerts_sent == 0:
         print("✅ Aucun seuil déclenché - tous les prix sont dans la zone neutre")
@@ -178,4 +211,3 @@ if __name__ == "__main__":
     print("🚀 Démarrage du monitoring crypto (Achat + Vente)...")
     monitor_cryptos()
     print("✅ Monitoring terminé avec succès!")
-
