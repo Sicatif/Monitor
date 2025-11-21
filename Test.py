@@ -25,7 +25,7 @@ def get_cryptos_data():
     }
     params = {
         'start': '1',
-        'limit': '10',
+        'limit': '50',
         'convert': 'USD',
     }
 
@@ -211,3 +211,4 @@ if __name__ == "__main__":
     print("🚀 Démarrage du monitoring crypto (Achat + Vente)...")
     monitor_cryptos()
     print("✅ Monitoring terminé avec succès!")
+
