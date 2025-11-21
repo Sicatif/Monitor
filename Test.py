@@ -90,7 +90,7 @@ def send_email(subject, body, to_emails):
 def monitor_cryptos():
     # SEUILS D'ACHAT (prix bas - opportunité d'achat)
     buy_prices = {
-        'bitcoin': 78337.95,
+        'bitcoin': 85427.43, #78337.95,
         'ethereum': 2002,
         'xrp': 2.00,
         'cardano': 0.25,
@@ -105,7 +105,7 @@ def monitor_cryptos():
         'xrp': 5.00,             # Vendre si XRP ≥ 5.00 USD
         'cardano': 3.00,         # Vendre si Cardano ≥ 3.00 USD
         'polkadot': 10.00,       # Vendre si Polkadot ≥ 10.00 USD
-        'litecoin': 500.00       # Vendre si Litecoin ≥ 500.00 USD
+        'litecoin': 70.00,       # Vendre si Litecoin ≥ 500.00 USD
     }
 
     print("🔄 Récupération des données crypto...")
@@ -178,3 +178,4 @@ if __name__ == "__main__":
     print("🚀 Démarrage du monitoring crypto (Achat + Vente)...")
     monitor_cryptos()
     print("✅ Monitoring terminé avec succès!")
+
