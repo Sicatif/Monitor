@@ -31,7 +31,7 @@ def get_cryptos_data():
 
     try:
         response = requests.get(url, headers=headers, params=params, timeout=10)
-        response.raise_for_status()  # Lève une exception pour les codes 4xx/5xx
+        response.raise_for_status()
         return response.json()['data']
     except requests.exceptions.RequestException as e:
         print(f"❌ Erreur API CoinMarketCap: {e}")
@@ -88,14 +88,24 @@ def send_email(subject, body, to_emails):
 
 # Fonction principale de monitoring
 def monitor_cryptos():
-    # Seuils de prix (modifiables)
-    target_prices = {
+    # SEUILS D'ACHAT (prix bas - opportunité d'achat)
+    buy_prices = {
         'bitcoin': 78337.95,
         'ethereum': 2002,
         'xrp': 2.00,
         'cardano': 0.25,
         'polkadot': 2.10,
         'litecoin': 63.00,
+    }
+    
+    # SEUILS DE VENTE (prix haut - prise de profit)
+    sell_prices = {
+        'bitcoin': 100000.00,    # Vendre si Bitcoin ≥ 100,000 USD
+        'ethereum': 5000.00,     # Vendre si Ethereum ≥ 5,000 USD
+        'xrp': 5.00,             # Vendre si XRP ≥ 5.00 USD
+        'cardano': 3.00,         # Vendre si Cardano ≥ 3.00 USD
+        'polkadot': 10.00,       # Vendre si Polkadot ≥ 10.00 USD
+        'litecoin': 500.00       # Vendre si Litecoin ≥ 500.00 USD
     }
 
     print("🔄 Récupération des données crypto...")
@@ -114,33 +124,57 @@ def monitor_cryptos():
     print("📊 Données récupérées :")
     print(df_filtered.to_string(index=False))
     
-    # Vérifier les seuils
+    # Vérifier les seuils d'ACHAT et de VENTE
     alerts_sent = 0
+    
     for index, row in df_filtered.iterrows():
         crypto_name = row['Nom'].lower()
         current_price = row['Prix actuel (USD)']
         
-        if crypto_name in target_prices and current_price <= target_prices[crypto_name]:
-            subject = f"🚨 Alerte Prix: {crypto_name.capitalize()} sous {target_prices[crypto_name]} USD"
+        # 🔽 ALERTE ACHAT (prix bas)
+        if crypto_name in buy_prices and current_price <= buy_prices[crypto_name]:
+            subject = f"🟢 ALERTE ACHAT: {crypto_name.capitalize()} sous {buy_prices[crypto_name]:,} USD"
             body = f"""
-Alerte de prix déclenchée !
+🟢 ALERTE D'ACHAT - OPPORTUNITÉ
 
 Crypto: {crypto_name.capitalize()}
-Prix actuel: {current_price} USD
-Seuil: {target_prices[crypto_name]} USD
-Différence: {round(target_prices[crypto_name] - current_price, 4)} USD
+Prix actuel: {current_price:,.2f} USD
+Seuil d'achat: {buy_prices[crypto_name]:,} USD
+Économie potentielle: {buy_prices[crypto_name] - current_price:,.2f} USD
+
+💡 Le prix est favorable pour l'achat !
 
 Date: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}
             """
-            print(f"🚨 Seuil atteint pour {crypto_name}: {current_price} <= {target_prices[crypto_name]}")
+            print(f"🟢 Alerte ACHAT {crypto_name}: {current_price:,.2f} <= {buy_prices[crypto_name]:,}")
+            send_email(subject, body, TO_EMAILS)
+            alerts_sent += 1
+        
+        # 🔼 ALERTE VENTE (prix haut)
+        elif crypto_name in sell_prices and current_price >= sell_prices[crypto_name]:
+            profit = current_price - sell_prices[crypto_name]
+            subject = f"🔴 ALERTE VENTE: {crypto_name.capitalize()} au-dessus de {sell_prices[crypto_name]:,} USD"
+            body = f"""
+🔴 ALERTE DE VENTE - PRISE DE PROFIT
+
+Crypto: {crypto_name.capitalize()}
+Prix actuel: {current_price:,.2f} USD
+Seuil de vente: {sell_prices[crypto_name]:,} USD
+💰 PROFIT POTENTIEL: {profit:,.2f} USD
+
+🎯 Temps de vendre et sécuriser les gains !
+
+Date: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}
+            """
+            print(f"🔴 Alerte VENTE {crypto_name}: {current_price:,.2f} >= {sell_prices[crypto_name]:,} (Profit: {profit:,.2f})")
             send_email(subject, body, TO_EMAILS)
             alerts_sent += 1
     
     if alerts_sent == 0:
-        print("✅ Aucun seuil déclenché - tous les prix sont au-dessus des seuils")
+        print("✅ Aucun seuil déclenché - tous les prix sont dans la zone neutre")
 
 # Exécution principale
 if __name__ == "__main__":
-    print("🚀 Démarrage du monitoring crypto...")
+    print("🚀 Démarrage du monitoring crypto (Achat + Vente)...")
     monitor_cryptos()
     print("✅ Monitoring terminé avec succès!")
