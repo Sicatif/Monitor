@@ -1,13 +1,23 @@
-name: Test Crypto Monitor
+name: Crypto Monitor
 
 on:
   schedule:
-    - cron: '*/10 * * * *'  # toutes les 10 minutes
-  workflow_dispatch:        # permet aussi de lancer manuellement
+    - cron: '*/10 * * * *'  # Toutes les 10 minutes
+  workflow_dispatch:        # Déclenchement manuel
+  push:
+    branches: [ main ]
+    paths: [ 'Test.py' ]   # Se déclenche si le script change
+
+# Empêcher l'annulation des exécutions concurrentes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  test-monitor:
+  monitor:
     runs-on: ubuntu-latest
+    timeout-minutes: 5  # Timeout de sécurité
+    
     env:
       CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
       FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
@@ -15,19 +25,33 @@ jobs:
       TO_EMAIL: ${{ secrets.TO_EMAIL }}
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: 🐍 Configuration de Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
+          cache: 'pip'  # Cache des dépendances
 
-      - name: Install dependencies
+      - name: 📦 Installation des dépendances
         run: |
           python -m pip install --upgrade pip
-          pip install requests pandas flask
+          pip install requests pandas
 
-      - name: Run crypto monitor script
+      - name: 🔍 Vérification des secrets
+        run: |
+          echo "Secrets configurés:"
+          echo "CMC_API_KEY: ${#CMC_API_KEY} caractères"
+          echo "FROM_EMAIL: $FROM_EMAIL"
+          echo "TO_EMAIL: $TO_EMAIL"
+
+      - name: 🚀 Exécution du monitoring
         run: |
           python Test.py
+
+      - name: ✅ Finalisation
+        if: always()
+        run: |
+          echo "Workflow terminé - $(date)"
+          echo "Vérifiez les logs ci-dessus pour les détails"
