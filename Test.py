@@ -42,7 +42,7 @@ def get_cryptos_data():
 
 # Filtrer les cryptos ciblées
 def filter_cryptos(data):
-    target_cryptos = ['bitcoin', 'ethereum', 'xrp', 'cardano', 'polkadot', 'litecoin']
+    target_cryptos = ['bitcoin', 'ethereum', 'xrp', 'cardano', 'polkadot', 'litecoin', 'chainlink', 'solana', 'ethereum-classic', 'avalanche']
     filtered_data = [crypto for crypto in data if crypto['slug'] in target_cryptos]
     
     if not filtered_data:
@@ -90,22 +90,30 @@ def send_email(subject, body, to_emails):
 def monitor_cryptos():
     # SEUILS D'ACHAT (prix bas - opportunité d'achat)
     buy_prices = {
-        'bitcoin': 85427.43,
+        'bitcoin': 60000,
         'ethereum': 2002,
         'xrp': 2.00,
         'cardano': 0.25,
-        'polkadot': 2.10,
-        'litecoin': 63.00,
+        'polkadot': 1.50,
+        'litecoin': 65.00,
+        'chainlink': 9,
+        'solana': 100,
+        'ethereum-classic': 9,
+        'avalanche': 10,
     }
     
     # SEUILS DE VENTE (prix haut - prise de profit)
     sell_prices = {
-        'bitcoin': 100000.00,
-        'ethereum': 5000.00,
-        'xrp': 5.00,
-        'cardano': 3.00,
+        'bitcoin': 120000.00,
+        'ethereum': 4000.00,
+        'xrp': 4.00,
+        'cardano': 2.00,
         'polkadot': 10.00,
-        'litecoin': 70.00,
+        'litecoin': 150.00,
+        'chainlink': 27,
+        'solana': 200,
+        'ethereum-classic': 30,
+        'avalanche': 50,
     }
 
     print("🔄 Récupération des données crypto...")
@@ -211,4 +219,5 @@ if __name__ == "__main__":
     print("🚀 Démarrage du monitoring crypto (Achat + Vente)...")
     monitor_cryptos()
     print("✅ Monitoring terminé avec succès!")
+
 
