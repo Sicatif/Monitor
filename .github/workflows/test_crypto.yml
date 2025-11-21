@@ -2,18 +2,18 @@ name: Crypto Monitor
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # ⬅️ Toutes les 15 minutes
-  workflow_dispatch:        # ⬅️ Déclenchement manuel
+    - cron: '*/15 * * * *'  # Toutes les 15 minutes
+  workflow_dispatch:         # Déclenchement manuel
 
-# ⭐ CONFIGURATION ANTI-ANNULATION ⭐
+# Configuration anti-annulation
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false   # ⬅️ EMPÊCHE LES ANNULATIONS
+  cancel-in-progress: false   # Empêche les annulations
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    timeout-minutes: 10       # ⬅️ Timeout de sécurité
+    timeout-minutes: 10       # Timeout de sécurité
     
     env:
       CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
@@ -22,33 +22,33 @@ jobs:
       TO_EMAIL: ${{ secrets.TO_EMAIL }}
 
     steps:
-      - name: 📥 Checkout du code
+      - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: 🐍 Configuration de Python
+      - name: Configuration de Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-          cache: 'pip'  # ⬅️ Cache pour accélérer
+          cache: 'pip'
 
-      - name: 📦 Installation des dépendances
+      - name: Installation des dépendances
         run: |
           python -m pip install --upgrade pip
           pip install requests pandas
 
-      - name: 🔍 Vérification des secrets
+      - name: Vérification des secrets
         run: |
           echo "Secrets configurés:"
           echo "API Key: ${#CMC_API_KEY} caractères"
           echo "Email: $FROM_EMAIL"
           echo "Destinataires: $TO_EMAIL"
 
-      - name: 🚀 Exécution du monitoring crypto
+      - name: Exécution du monitoring crypto
         run: |
           python Test.py
 
-      - name: ✅ Finalisation
+      - name: Finalisation
         if: always()
         run: |
-          echo "✅ Monitoring terminé - $(date)"
-          echo "📊 Vérifiez les logs ci-dessus pour les alertes"
+          echo "Monitoring terminé - $(date)"
+          echo "Vérifiez les logs ci-dessus pour les alertes"
